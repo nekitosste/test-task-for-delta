@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="ru">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0"
+		/>
+		<title>Тестовое задание</title>
+		<script src="https://code.highcharts.com/highcharts.js"></script>
+		<style>
+			* {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+
+			body {
+				background: #eef2f6;
+				font-family: 'Segoe UI', 'Arial', sans-serif;
+				padding: 30px 20px;
+			}
+
+			.container {
+				max-width: 1200px;
+				margin: 0 auto;
+				background: white;
+				box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+				padding: 30px;
+				border-radius: 24px;
+			}
+
+			.table-responsive {
+				overflow-x: auto;
+				background: white;
+				border-radius: 16px;
+			}
+
+			table {
+				width: 100%;
+				border-collapse: collapse;
+				font-size: 15px;
+			}
+
+			th {
+				background: #f7f9fc;
+				color: #3a4b5c;
+				font-weight: 500;
+				padding: 16px 12px;
+				white-space: nowrap;
+			}
+
+			td {
+				padding: 14px 12px;
+				border: 3px solid white;
+				color: #1e2e40;
+				text-align: center;
+				background-color: #f5f5f5;
+			}
+
+			th:first-child,
+			td:first-child {
+				text-align: left;
+				font-weight: 500;
+			}
+
+			th:nth-child(2),
+			th:nth-child(3),
+			th:nth-child(4),
+			td:nth-child(2),
+			td:nth-child(3),
+			td:nth-child(4) {
+				text-align: center;
+			}
+
+			td:nth-child(3) {
+				font-weight: 600;
+				text-align: center;
+				white-space: nowrap;
+			}
+
+			td:nth-child(3) span {
+				margin-left: 12px;
+				display: inline-block;
+			}
+
+			.positive {
+				background: #ecf7e7;
+			}
+
+			.negative {
+				background: #fee6e6;
+			}
+
+			.positive-text {
+				color: green;
+				font-weight: 600;
+			}
+
+			.negative-text {
+				color: red;
+				font-weight: 600;
+			}
+
+			tbody tr {
+				cursor: pointer;
+				transition: background 0.2s ease;
+			}
+
+			tbody tr:hover {
+				background: #f2f8ff;
+			}
+
+			tbody tr.selected {
+				background: #e6f0fd;
+				box-shadow: inset 0 0 0 1px #1e6dc7;
+			}
+
+			.today-row-block {
+				background-color: #edf8ff;
+			}
+
+			.chart-row {
+				display: none;
+			}
+
+			.chart-row.active {
+				display: table-row;
+				animation: slideDown 0.3s ease-out;
+			}
+
+			@keyframes slideDown {
+				0% {
+					opacity: 0;
+					transform: translateY(-10px);
+				}
+				100% {
+					opacity: 1;
+					transform: translateY(0);
+				}
+			}
+
+			.chart-cell {
+				padding: 20px;
+				background-color: white;
+				border: 3px solid white;
+			}
+
+			@media (max-width: 768px) {
+				body {
+					padding: 15px 10px;
+				}
+
+				.container {
+					padding: 16px;
+					border-radius: 16px;
+				}
+
+				th,
+				td {
+					padding: 12px 8px;
+					font-size: 14px;
+				}
+
+				td:nth-child(3) {
+					white-space: normal;
+					display: flex;
+					flex-direction: column;
+					align-items: center;
+					gap: 4px;
+				}
+
+				td:nth-child(3) span {
+					margin-left: 0;
+				}
+
+				.chart-cell {
+					padding: 12px;
+				}
+
+				#chart-container,
+				[id^='chart-'] {
+					height: 300px !important;
+				}
+			}
+
+			@media (max-width: 480px) {
+				th,
+				td {
+					padding: 10px 6px;
+					font-size: 13px;
+				}
+
+				td:first-child {
+					white-space: normal;
+					word-break: break-word;
+				}
+
+				.chart-cell {
+					padding: 8px;
+				}
+
+				[id^='chart-'] {
+					height: 250px !important;
+				}
+
+				.chart-title {
+					font-size: 16px !important;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<div class="table-responsive">
+				<table id="table-cash">
+					<thead>
+						<tr>
+							<th>Показатель</th>
+							<th>Текущий день</th>
+							<th>Вчера</th>
+							<th>Этот день недели</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
+			</div>
+		</div>
+
+		<script>
+			const cashData = [
+				{
+					name: 'Выручка, руб',
+					today: 500521,
+					yesterday: 480521,
+					percent: 4,
+					week: 4805121
+				},
+				{
+					name: 'Наличные',
+					today: 300000,
+					yesterday: 300000,
+					percent: 0,
+					week: 300000
+				},
+				{
+					name: 'Безналичный расчет',
+					today: 100000,
+					yesterday: 100000,
+					percent: 0,
+					week: 100000
+				},
+				{
+					name: 'Кредитные карты',
+					today: 100521,
+					yesterday: 100521,
+					percent: 0,
+					week: 100521
+				},
+				{
+					name: 'Средний чек, руб',
+					today: 1300,
+					yesterday: 900,
+					percent: 44,
+					week: 900
+				},
+				{
+					name: 'Средний гость, руб',
+					today: 1200,
+					yesterday: 800,
+					percent: 50,
+					week: 800
+				},
+				{
+					name: 'Удаления из чека (после оплаты), руб',
+					today: 1000,
+					yesterday: 1100,
+					percent: -9,
+					week: 900
+				},
+				{
+					name: 'Удаления из чека (до оплаты), руб',
+					today: 1300,
+					yesterday: 1300,
+					percent: 0,
+					week: 900
+				},
+				{
+					name: 'Количество чеков',
+					today: 34,
+					yesterday: 36,
+					percent: -6,
+					week: 34
+				},
+				{
+					name: 'Количество гостей',
+					today: 34,
+					yesterday: 36,
+					percent: -6,
+					week: 32
+				}
+			]
+
+			function formatNumber(num) {
+				return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+			}
+
+			function renderTable(tableId, data) {
+				const tbody = document.querySelector(`#${tableId} tbody`)
+				tbody.innerHTML = ''
+
+				data.forEach((row, index) => {
+					const tr = document.createElement('tr')
+					tr.dataset.index = index
+
+					const percentClass =
+						row.percent > 0 ? 'positive' : row.percent < 0 ? 'negative' : ''
+					const percentClassForText =
+						row.percent > 0
+							? 'positive-text'
+							: row.percent < 0
+								? 'negative-text'
+								: ''
+
+					tr.innerHTML = `
+          <td>${row.name}</td>
+          <td class="today-row-block">${formatNumber(row.today)}</td>
+          <td class="${percentClass}">${formatNumber(row.yesterday)} <span class="${percentClassForText}">${row.percent}%</span></td>
+          <td>${formatNumber(row.week)}</td>
+        `
+					tbody.appendChild(tr)
+
+					const chartRow = document.createElement('tr')
+					chartRow.className = 'chart-row'
+					chartRow.id = `chart-row-${index}`
+
+					const chartCell = document.createElement('td')
+					chartCell.colSpan = 4
+					chartCell.className = 'chart-cell'
+
+					const chartContainer = document.createElement('div')
+					chartContainer.id = `chart-${index}`
+					chartContainer.style.width = '100%'
+					chartContainer.style.height = '400px'
+
+					const chartTitle = document.createElement('div')
+					chartTitle.id = `chart-title-${index}`
+					chartTitle.className = 'chart-title'
+					chartTitle.style.fontSize = '18px'
+					chartTitle.style.fontWeight = '600'
+					chartTitle.style.color = '#1c2a3a'
+					chartTitle.style.marginBottom = '15px'
+					chartTitle.innerText = `График: ${row.name}`
+
+					chartCell.appendChild(chartTitle)
+					chartCell.appendChild(chartContainer)
+					chartRow.appendChild(chartCell)
+					tbody.appendChild(chartRow)
+				})
+			}
+
+			renderTable('table-cash', cashData)
+
+			function createChart(containerId, data) {
+				Highcharts.chart(containerId, {
+					chart: {
+						type: 'spline',
+						style: { fontFamily: 'Segoe UI, Arial' },
+						animation: true
+					},
+					title: { text: null },
+					xAxis: {
+						categories: ['Текущий день', 'Вчера', 'Этот день недели'],
+						crosshair: true
+					},
+					yAxis: {
+						min: 0,
+						title: { text: 'Значение' },
+						labels: { format: '{value:,.0f}' }
+					},
+					tooltip: { pointFormat: '<b>{point.y:,.0f}</b>' },
+					series: [
+						{
+							name: data.name,
+							data: [data.today, data.yesterday, data.week],
+							color: '#1e6dc7',
+							dataLabels: {
+								enabled: true,
+								format: '{point.y:,.0f}',
+								style: { fontSize: '11px', textOutline: 'none' }
+							}
+						}
+					],
+					credits: { enabled: false },
+					legend: { enabled: false },
+					plotOptions: {
+						series: {
+							animation: {
+								duration: 800
+							}
+						}
+					}
+				})
+			}
+
+			function setupRowClick(tableId, dataSource) {
+				document.querySelectorAll(`#${tableId} tbody tr`).forEach(row => {
+					if (row.classList.contains('chart-row')) return
+
+					row.addEventListener('click', function (e) {
+						const index = this.dataset.index
+						const chartRow = document.getElementById(`chart-row-${index}`)
+						const isActive = chartRow.classList.contains('active')
+
+						document.querySelectorAll('.chart-row').forEach(row => {
+							row.classList.remove('active')
+						})
+
+						document.querySelectorAll('tbody tr').forEach(r => {
+							if (!r.classList.contains('chart-row')) {
+								r.classList.remove('selected')
+							}
+						})
+
+						if (!isActive) {
+							chartRow.classList.add('active')
+							this.classList.add('selected')
+
+							const rowData = dataSource[index]
+							const containerId = `chart-${index}`
+
+							if (
+								!Highcharts.charts.find(
+									chart =>
+										chart && chart.renderTo && chart.renderTo.id === containerId
+								)
+							) {
+								createChart(containerId, rowData)
+							}
+						}
+					})
+				})
+			}
+
+			setupRowClick('table-cash', cashData)
+		</script>
+	</body>
+</html>
